@@ -155,3 +155,9 @@ class DiscreteSACAgent:
         torch.save(self.actor.state_dict(), f"{save_dir}/actor.pth")
         torch.save(self.critic.state_dict(), f"{save_dir}/critic.pth")
         torch.save(self.critic_target.state_dict(), f"{save_dir}/critic_target.pth")
+        
+    def load(self, save_dir, device):
+        self.actor.load_state_dict(torch.load(f'{save_dir}/actor.pth', map_location=device, weights_only=True))
+        self.critic.load_state_dict(torch.load(f'{save_dir}/critic.pth', map_location=device, weights_only=True))
+        self.critic_target.load_state_dict(torch.load(f'{save_dir}/critic_target.pth', map_location=device, weights_only=True))
+        

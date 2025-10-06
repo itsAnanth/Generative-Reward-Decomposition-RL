@@ -76,3 +76,9 @@ class GenerativeModel(nn.Module):
         for model in models:
             if hasattr(model, 'save') and callable(getattr(model, 'save')):
                 model.save(save_dir)
+                
+    def load(self, save_dir, device):
+        models = [self.reward_model, self.dynamics_model, self.causal_module]
+        for model in models:
+            if hasattr(model, 'load') and callable(getattr(model, 'load')):
+                model.load(save_dir, device)

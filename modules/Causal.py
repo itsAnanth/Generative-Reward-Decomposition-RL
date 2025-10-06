@@ -79,3 +79,7 @@ class CausalModel(nn.Module):
     def save(self, save_dir):
         """Save causal model parameters."""
         torch.save(self.state_dict(), f"{save_dir}/causal.pth")
+        
+    def load(self, save_dir, device):
+        state_dict = torch.load(f'{save_dir}/causal.pth', map_location=device, weights_only=True)
+        self.load_state_dict(state_dict)
