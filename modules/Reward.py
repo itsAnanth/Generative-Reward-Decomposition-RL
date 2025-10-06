@@ -19,3 +19,7 @@ class RewardModel(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         return self.fc3(x)
+    
+    def save(self, save_dir):
+        """Save reward model parameters."""
+        torch.save(self.state_dict(), f"{save_dir}/reward.pth")

@@ -70,3 +70,9 @@ class GenerativeModel(nn.Module):
         
         total_loss = L_rew + L_dyn + L_reg
         return total_loss, L_rew, L_dyn, L_reg
+    
+    def save(self, save_dir):
+        models = [self.reward_model, self.dynamics_model, self.causal_module]
+        for model in models:
+            if hasattr(model, 'save') and callable(getattr(model, 'save')):
+                model.save(save_dir)

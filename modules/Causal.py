@@ -75,3 +75,7 @@ class CausalModel(nn.Module):
                 if torch.all(s_pi_mask == old_s_pi_mask):
                     break  # Converged
         return s_pi_mask.detach()
+    
+    def save(self, save_dir):
+        """Save causal model parameters."""
+        torch.save(self.state_dict(), f"{save_dir}/causal.pth")

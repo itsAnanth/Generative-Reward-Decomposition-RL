@@ -21,3 +21,7 @@ class DynamicsModel(nn.Module):
         x = F.relu(self.fc2(x))
         predicted_next_state = self.fc3(x)
         return predicted_next_state
+    
+    def save(self, save_dir):
+        """Save dynamics model parameters."""
+        torch.save(self.state_dict(), f"{save_dir}/dynamics.pth")
