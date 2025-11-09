@@ -35,6 +35,7 @@ class GenerativeModel(nn.Module):
     def calculate_loss(self, trajectories, transitions):
         L_rew, L_dyn, L_reg = torch.tensor(0.0, device=self.DEVICE), torch.tensor(0.0, device=self.DEVICE), torch.tensor(0.0, device=self.DEVICE)
         
+        returns = []
         # --- 1. Reward Redistribution Loss (L_rew) ---
         if trajectories:
             C_s_s, C_a_s, C_s_r, C_a_r = self.causal_module.get_causal_masks(training=True)
@@ -48,7 +49,11 @@ class GenerativeModel(nn.Module):
                 discounts = torch.pow(self.GAMMA, torch.arange(len(states), device=self.DEVICE)).unsqueeze(1)
                 predicted_return = torch.sum(predicted_rewards * discounts)
                 
-                rew_losses.append(F.mse_loss(predicted_return, total_return))
+                rew_losses.append(F.mse_loss(predicted_return, total_return.squeeze()))
+                returns.append({
+                    'predicted_return': predicted_return.item(),
+                    'total_return': total_return.squeeze().item()
+                })
             L_rew = torch.stack(rew_losses).mean()
         
         # --- 2. Dynamics Loss (L_dyn) ---
@@ -69,7 +74,7 @@ class GenerativeModel(nn.Module):
                   self.LAMBDA_S_R * log_prob_s_r + self.LAMBDA_A_R * log_prob_a_r)
         
         total_loss = L_rew + L_dyn + L_reg
-        return total_loss, L_rew, L_dyn, L_reg
+        return total_loss, L_rew, L_dyn, L_reg, returns
     
     def save(self, save_dir):
         models = [self.reward_model, self.dynamics_model, self.causal_module]

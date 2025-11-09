@@ -2,6 +2,7 @@ import gymnasium as gym
 import torch
 import time
 import numpy as np
+import pickle as pkl
 import torch.nn.functional as F
 from modules import RewardModel, GenerativeModel, ReplayBuffer, DiscreteSACAgent, EpisodicRewardWrapper
 
@@ -15,7 +16,7 @@ BATCH_SIZE = 256          # Batch size for training
 TAU = 0.005               # Soft update coefficient for target networks
 ALPHA = 0.2               # SAC temperature parameter (entropy regularization)
 HIDDEN_DIM = 256          # Hidden dimension for neural networks
-MAX_EPISODES = 1000       # Total number of episodes to run
+MAX_EPISODES = 100      # Total number of episodes to run
 MAX_STEPS_PER_EPISODE = 500 # Max steps per episode for CartPole-v1
 START_TRAINING_EPISODES = 10 # Number of episodes to collect data before training starts
 
@@ -27,6 +28,7 @@ LAMBDA_S_S = 5e-5  # state -> state
 LAMBDA_A_S = 1e-8  # action -> state
 
 def main():
+    metrics = []
     env = gym.make("CartPole-v1")
     env = EpisodicRewardWrapper(env)
     
@@ -83,7 +85,18 @@ def main():
                 generative_model.optimizer.zero_grad()
                 transitions = replay_buffer.sample(BATCH_SIZE)
                 trajectories = replay_buffer.sample_trajectories(4)
-                gen_loss, l_rew, l_dyn, l_reg = generative_model.calculate_loss(trajectories, transitions)
+                gen_loss, l_rew, l_dyn, l_reg, returns = generative_model.calculate_loss(trajectories, transitions)
+                
+                metrics.append({
+                    'episode': i_episode,
+                    'gen_loss': gen_loss.item(),
+                    'l_rew': l_rew.item(),
+                    'l_dyn': l_dyn.item(),
+                    'l_reg': l_reg.item(),
+                    'returns': returns
+                })
+                
+                
                 if torch.is_tensor(gen_loss):
                     gen_loss.backward()
                     generative_model.optimizer.step()
@@ -123,6 +136,9 @@ def main():
     env.close()
     
     sac_agent.save('weights')
+    
+    with open('results/metrics.pkl', 'wb') as f:
+        pkl.dump(metrics, f)
 
 
 if __name__ == "__main__":
